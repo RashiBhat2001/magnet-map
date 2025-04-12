@@ -65,7 +65,7 @@
     }
 
     // Load the GeoJSON data (replace with your file path or URL)
-    fetch('ptal_data.geojson')  // Make sure the path is correct (use URL if on GitHub Pages)
+    fetch('Delhi_PTAL.geojson')  // Using the file path from the repository
       .then(response => response.json())
       .then(data => {
         L.geoJSON(data, {
