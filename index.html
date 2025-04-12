@@ -140,6 +140,12 @@
             layer.on('mouseout', function() {
               ptalLayer.resetStyle(this);
             });
+
+            // Zoom to feature on click and show stats
+            layer.on('click', function() {
+              map.setView(layer.getBounds().getCenter(), 14);
+              layer.openPopup();
+            });
           }
         }).addTo(map);
       });
