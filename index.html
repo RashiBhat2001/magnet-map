@@ -112,6 +112,7 @@
     }
 
     var ptalLayer;
+    var selectedLayer = null; // Variable to store the selected layer
 
     // Fetch and add PTAL data
     fetch('Delhi_PTAL.geojson')
@@ -133,7 +134,7 @@
                ${ptalMeaning[feature.properties["PTAL"]] || 'No description available.'}`
             );
 
-            // Highlighting feature on mouseover and mouseout
+            // Hover effect
             layer.on('mouseover', function() {
               this.setStyle({ weight: 3, color: '#000' });
             });
@@ -145,6 +146,26 @@
             layer.on('click', function() {
               map.fitBounds(layer.getBounds(), { padding: [20, 20] });
               layer.openPopup();
+
+              // If a layer was previously selected, reset its style
+              if (selectedLayer) {
+                selectedLayer.setStyle(style(selectedLayer.feature));
+              }
+
+              // Highlight the selected layer with a shadow effect
+              layer.setStyle({
+                weight: 4,
+                color: '#333', // Darker border for selected
+                dashArray: '',
+                fillOpacity: 0.9,
+                fillColor: getColor(feature.properties["PTAL"]),
+                shadowColor: '#aaa', // Adding a shadow color for effect
+                shadowBlur: 10, // Optional: Adding blur to the shadow
+                shadowOffset: [5, 5] // Adding offset to the shadow
+              });
+
+              // Store the selected layer
+              selectedLayer = layer;
             });
           }
         }).addTo(map);
