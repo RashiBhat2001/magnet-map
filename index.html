@@ -141,9 +141,9 @@
               ptalLayer.resetStyle(this);
             });
 
-            // Zoom to feature on click and show stats
+            // Zoom to the feature with fitBounds and show stats
             layer.on('click', function() {
-              map.setView(layer.getBounds().getCenter(), 14);
+              map.fitBounds(layer.getBounds(), { padding: [20, 20] });
               layer.openPopup();
             });
           }
@@ -160,7 +160,7 @@
           if (layer.feature &&
               layer.feature.properties &&
               layer.feature.properties["Plan. Zone"].toLowerCase().includes(searchValue)) {
-            map.setView(layer.getBounds().getCenter(), 14);
+            map.fitBounds(layer.getBounds(), { padding: [20, 20] });
             layer.openPopup();
             found = true;
           }
