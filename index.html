@@ -152,17 +152,32 @@
                 selectedLayer.setStyle(style(selectedLayer.feature));
               }
 
-              // Highlight the selected layer with a shadow effect
+              // Highlight the selected layer with a simulated shadow effect
               layer.setStyle({
                 weight: 4,
                 color: '#333', // Darker border for selected
                 dashArray: '',
                 fillOpacity: 0.9,
                 fillColor: getColor(feature.properties["PTAL"]),
-                shadowColor: '#aaa', // Adding a shadow color for effect
-                shadowBlur: 10, // Optional: Adding blur to the shadow
-                shadowOffset: [5, 5] // Adding offset to the shadow
+                opacity: 0.9
               });
+
+              // Create a shadow effect by adding a slightly larger layer with a darker color
+              var shadowLayer = L.geoJSON(feature, {
+                style: {
+                  weight: 6, // Make the shadow a bit thicker
+                  color: '#333', // Dark color for shadow
+                  opacity: 0.5,
+                  dashArray: '',
+                  fillOpacity: 0.6,
+                  fillColor: getColor(feature.properties["PTAL"]),
+                }
+              }).addTo(map);
+              
+              // Remove the shadow layer after zooming out
+              setTimeout(function() {
+                map.removeLayer(shadowLayer);
+              }, 2000);
 
               // Store the selected layer
               selectedLayer = layer;
