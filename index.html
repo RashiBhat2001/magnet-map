@@ -34,17 +34,14 @@
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
   <script>
-    // Create the map
-    var map = L.map('map').setView([28.6139, 77.2090], 11); // Default to Delhi
+    var map = L.map('map').setView([28.6139, 77.2090], 11);
 
-    // Add OpenStreetMap base layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Function to style based on PTAL score
     function getColor(ptal) {
-      switch(ptal) {
+      switch(ptal.toLowerCase()) {
         case '6b': return '#00441b';
         case '5': return '#238b45';
         case '4': return '#66c2a4';
@@ -55,7 +52,7 @@
 
     function style(feature) {
       return {
-        fillColor: getColor(feature.properties.ptal),
+        fillColor: getColor(feature.properties["PTAL"]),
         weight: 2,
         opacity: 1,
         color: 'white',
@@ -64,31 +61,34 @@
       };
     }
 
-    // Load the GeoJSON data (replace with your file path or URL)
-    fetch('Delhi_PTAL.geojson')  // Using the file path from the repository
+    fetch('Delhi_PTAL.geojson')
       .then(response => response.json())
       .then(data => {
         L.geoJSON(data, {
           style: style,
           onEachFeature: function (feature, layer) {
+            var zone = feature.properties["Plan. Zone"];
+            var ptal = feature.properties["PTAL"];
             layer.bindPopup(
-              `<strong>${feature.properties.area}</strong><br>PTAL Score: ${feature.properties.ptal}`
+              `<strong>Planning Zone:</strong> ${zone}<br><strong>PTAL Score:</strong> ${ptal}`
             );
           }
         }).addTo(map);
       });
 
-    // Search functionality
     document.getElementById('city-search').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         var searchValue = e.target.value.toLowerCase();
         var found = false;
-        
+
         map.eachLayer(function(layer) {
-          if (layer.feature && layer.feature.properties && layer.feature.properties.area.toLowerCase().includes(searchValue)) {
-            map.setView(layer.getBounds().getCenter(), 14);
-            layer.openPopup();
-            found = true;
+          if (layer.feature && layer.feature.properties) {
+            var zone = layer.feature.properties["Plan. Zone"];
+            if (zone && zone.toLowerCase().includes(searchValue)) {
+              map.setView(layer.getBounds().getCenter(), 14);
+              layer.openPopup();
+              found = true;
+            }
           }
         });
 
