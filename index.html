@@ -4,63 +4,83 @@
   <title>MagNet PTAL Map - Delhi</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  
   <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+    }
     #map {
       height: 100vh;
       width: 100%;
     }
     #search-bar {
       position: absolute;
-      top: 10px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
       background-color: white;
-      padding: 8px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      padding: 8px 12px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       z-index: 1000;
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
-    #legend {
-      position: absolute;
-      bottom: 30px;
-      left: 10px;
-      background: white;
-      padding: 10px;
-      border-radius: 6px;
+    #city-search {
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
       font-size: 14px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      width: 200px;
+    }
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      font-size: 14px;
+      line-height: 1.5em;
       z-index: 1000;
     }
-    .legend-item {
+    .legend div {
       display: flex;
       align-items: center;
-      margin-bottom: 5px;
+      gap: 6px;
     }
-    .legend-color {
+    .legend-box {
       width: 18px;
       height: 18px;
-      margin-right: 8px;
-      border-radius: 3px;
+      border: 1px solid #444;
     }
   </style>
 </head>
 <body>
   <div id="search-bar">
-    <input type="text" id="city-search" placeholder="🔍 Search for a planning zone..." style="width: 240px; padding: 5px;" />
+    <input type="text" id="city-search" placeholder="Search area name" />
   </div>
   <div id="map"></div>
-
-  <div id="legend">
+  <div class="legend">
     <strong>PTAL Legend</strong><br>
-    <div class="legend-item"><div class="legend-color" style="background:#00441b"></div>6b (Very High)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#238b45"></div>5 (High)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#66c2a4"></div>4 (Moderate)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#a1d99b"></div>3 (Low)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#ccc"></div>Other/Unknown</div>
+    <div><div class="legend-box" style="background-color:#00441b"></div> 6b – Very High</div>
+    <div><div class="legend-box" style="background-color:#238b45"></div> 5 – High</div>
+    <div><div class="legend-box" style="background-color:#66c2a4"></div> 4 – Moderate</div>
+    <div><div class="legend-box" style="background-color:#a1d99b"></div> 3 – Low</div>
+    <div><div class="legend-box" style="background-color:#ccc"></div> N/A</div>
   </div>
 
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
   <script>
     var map = L.map('map').setView([28.6139, 77.2090], 11);
 
@@ -69,7 +89,7 @@
     }).addTo(map);
 
     function getColor(ptal) {
-      switch(ptal.toLowerCase()) {
+      switch(ptal) {
         case '6b': return '#00441b';
         case '5': return '#238b45';
         case '4': return '#66c2a4';
@@ -80,53 +100,43 @@
 
     function style(feature) {
       return {
-        fillColor: getColor(feature.properties["PTAL"]),
+        fillColor: getColor(feature.properties.ptal),
         weight: 1.5,
         opacity: 1,
-        color: 'white',
+        color: '#222',
         dashArray: '2',
         fillOpacity: 0.7
       };
     }
 
-    function highlightFeature(e) {
-      var layer = e.target;
-      layer.setStyle({
-        weight: 3,
-        color: '#666',
-        dashArray: '',
-        fillOpacity: 0.9
-      });
-      layer.bringToFront();
-    }
+    var ptalLayer;
 
-    function resetHighlight(e) {
-      geojson.resetStyle(e.target);
-    }
-
-    function zoomToFeature(e) {
-      map.fitBounds(e.target.getBounds());
-      e.target.openPopup();
-    }
-
-    function onEachFeature(feature, layer) {
-      var zone = feature.properties["Plan. Zone"];
-      var ptal = feature.properties["PTAL"];
-      layer.bindPopup(`<strong>Planning Zone:</strong> ${zone}<br><strong>PTAL Score:</strong> ${ptal}`);
-      layer.on({
-        mouseover: highlightFeature,
-        mouseout: resetHighlight,
-        click: zoomToFeature
-      });
-    }
-
-    var geojson;
     fetch('Delhi_PTAL.geojson')
       .then(response => response.json())
       .then(data => {
-        geojson = L.geoJSON(data, {
+        ptalLayer = L.geoJSON(data, {
           style: style,
-          onEachFeature: onEachFeature
+          onEachFeature: function (feature, layer) {
+            const ptalMeaning = {
+              '6b': 'Very High PTAL. Excellent PT access.',
+              '5': 'High PTAL. Good PT coverage.',
+              '4': 'Moderate PTAL. Average access.',
+              '3': 'Low PTAL. Weak PT service.',
+            };
+
+            layer.bindPopup(
+              `<strong>${feature.properties.area}</strong><br>
+               PTAL Score: ${feature.properties.ptal}<br>
+               ${ptalMeaning[feature.properties.ptal] || 'No description available.'}`
+            );
+
+            layer.on('mouseover', function() {
+              this.setStyle({ weight: 3, color: '#000' });
+            });
+            layer.on('mouseout', function() {
+              ptalLayer.resetStyle(this);
+            });
+          }
         }).addTo(map);
       });
 
@@ -134,16 +144,17 @@
       if (e.key === 'Enter') {
         var searchValue = e.target.value.toLowerCase();
         var found = false;
-        geojson.eachLayer(function(layer) {
-          var zone = layer.feature.properties["Plan. Zone"];
-          if (zone && zone.toLowerCase().includes(searchValue)) {
+
+        ptalLayer.eachLayer(function(layer) {
+          if (layer.feature && layer.feature.properties.area.toLowerCase().includes(searchValue)) {
             map.setView(layer.getBounds().getCenter(), 14);
             layer.openPopup();
             found = true;
           }
         });
+
         if (!found) {
-          alert('Zone not found!');
+          alert('Area not found in the PTAL data!');
         }
       }
     });
